@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "Stream to Player",
+  "version": "1.0.0",
+  "description": "ストリーミングサイトの動画をmpv/vlcで再生する",
+
+  "permissions": [
+    "activeTab",
+    "declarativeContent",
+    "nativeMessaging",
+    "scripting",
+    "storage"
+  ],
+
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "Stream to Player",
+    "default_state": "disabled"
+  },
+
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
+
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

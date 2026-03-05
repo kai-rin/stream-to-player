@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Stream to Player - 設定</title>
+  <style>
+    body {
+      max-width: 640px;
+      margin: 32px auto;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 14px;
+      color: #222;
+      background: #f8f9fa;
+      padding: 0 16px 32px;
+    }
+    h1 { font-size: 20px; border-bottom: 2px solid #1976d2; padding-bottom: 8px; }
+    h2 { font-size: 15px; color: #444; margin-top: 24px; }
+
+    .form-group {
+      margin: 12px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .form-group > label { font-size: 12px; color: #555; font-weight: 600; }
+    input[type="text"], select {
+      padding: 7px 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 13px;
+    }
+    input[type="text"]:focus, select:focus {
+      outline: none;
+      border-color: #1976d2;
+    }
+    .hint { font-size: 11px; color: #888; }
+
+    .radio-group { display: flex; gap: 16px; align-items: center; }
+    .radio-group label { font-weight: normal; color: #333; cursor: pointer; }
+
+    .btn-row { margin-top: 24px; display: flex; gap: 12px; }
+    .btn {
+      padding: 8px 24px;
+      border: none;
+      border-radius: 5px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    #btn-save   { background: #1976d2; color: white; }
+    #btn-save:hover { background: #1565c0; }
+    #btn-test   { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+    #btn-test:hover { background: #c8e6c9; }
+    #btn-reset  { background: #eee; color: #333; }
+    #btn-reset:hover { background: #ddd; }
+
+    #status-msg {
+      margin-top: 12px;
+      font-size: 13px;
+      min-height: 20px;
+      white-space: pre-wrap;
+    }
+    .ok    { color: #4caf50; }
+    .error { color: #e53935; }
+
+    hr { border: none; border-top: 1px solid #ddd; margin: 20px 0; }
+  </style>
+</head>
+<body>
+  <h1>Stream to Player 設定</h1>
+
+  <h2>プレイヤー</h2>
+  <div class="form-group">
+    <label>デフォルトプレイヤー</label>
+    <div class="radio-group">
+      <label><input type="radio" name="player" value="mpv" id="player-mpv"> mpv</label>
+      <label><input type="radio" name="player" value="vlc" id="player-vlc"> VLC</label>
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="player-path">プレイヤーの実行ファイルパス</label>
+    <input type="text" id="player-path" placeholder="空欄 = 自動検索">
+    <span class="hint">空欄の場合、ネイティブホストがPATHやよくある場所から自動検索します</span>
+  </div>
+
+  <hr>
+
+  <h2>ダウンロードツール</h2>
+  <div class="form-group">
+    <label>ツール優先設定</label>
+    <div class="radio-group">
+      <label><input type="radio" name="toolOverride" value="auto" id="tool-auto"> 自動</label>
+      <label><input type="radio" name="toolOverride" value="streamlink" id="tool-streamlink"> streamlink優先</label>
+      <label><input type="radio" name="toolOverride" value="yt-dlp" id="tool-ytdlp"> yt-dlp優先</label>
+    </div>
+    <span class="hint">「自動」: ライブ配信はstreamlink、VOD/アーカイブはyt-dlpを使用</span>
+  </div>
+
+  <hr>
+
+  <h2>品質・フォーマット</h2>
+  <div class="form-group">
+    <label for="quality-streamlink">streamlink デフォルト品質</label>
+    <select id="quality-streamlink">
+      <option value="best">best (最高画質)</option>
+      <option value="1080p">1080p</option>
+      <option value="720p">720p</option>
+      <option value="480p">480p</option>
+      <option value="360p">360p</option>
+      <option value="worst">worst (最低画質)</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label for="quality-ytdlp">yt-dlp デフォルトフォーマット</label>
+    <select id="quality-ytdlp">
+      <option value="bestvideo+bestaudio/best">最高画質 (bestvideo+bestaudio)</option>
+      <option value="bestvideo[height<=1080]+bestaudio/best[height<=1080]">1080p以下</option>
+      <option value="bestvideo[height<=720]+bestaudio/best[height<=720]">720p以下</option>
+      <option value="bestaudio">音声のみ</option>
+    </select>
+  </div>
+
+  <hr>
+
+  <div class="btn-row">
+    <button class="btn" id="btn-save">保存</button>
+    <button class="btn" id="btn-test">接続テスト</button>
+    <button class="btn" id="btn-reset">デフォルトに戻す</button>
+  </div>
+
+  <div id="status-msg"></div>
+
+  <script src="options.js"></script>
+</body>
+</html>

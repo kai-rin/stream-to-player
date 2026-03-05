@@ -1,0 +1,9 @@
+{
+  "name": "com.stream_to_player.host",
+  "description": "Stream to Player Native Messaging Host",
+  "path": "stream_to_player_host.bat",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://EXTENSION_ID_PLACEHOLDER/"
+  ]
+}

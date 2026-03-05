@@ -1,0 +1,23 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Claude Code
+.claude/
+
+# Playwright MCP
+.playwright-mcp/
+
+# OS
+Thumbs.db
+desktop.ini
+
+# Logs (runtime generated)
+*.log
+
+# Editor
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
