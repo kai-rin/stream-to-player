@@ -110,6 +110,73 @@
     #unsupported p { margin: 0 0 6px; }
     #unsupported small { font-size: 11px; }
 
+    #custom-url-section {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #333;
+    }
+
+    #custom-url-divider {
+      font-size: 11px;
+      color: #666;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    #custom-url-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    #custom-url-input {
+      flex: 1;
+      background: #16213e;
+      color: #e0e0e0;
+      border: 1px solid #333;
+      border-radius: 4px;
+      padding: 6px 8px;
+      font-size: 12px;
+      outline: none;
+    }
+    #custom-url-input:focus { border-color: #555; }
+    #custom-url-input::placeholder { color: #555; }
+
+    #btn-custom-play {
+      background: #e53935;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 0 12px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    #btn-custom-play:disabled { opacity: 0.4; cursor: not-allowed; }
+    #btn-custom-play:hover:not(:disabled) { opacity: 0.85; }
+
+    #custom-tool-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    #custom-tool-select, #custom-quality-select {
+      flex: 1;
+      background: #16213e;
+      color: #e0e0e0;
+      border: 1px solid #333;
+      border-radius: 4px;
+      padding: 4px 6px;
+      font-size: 12px;
+    }
+
+    #custom-status {
+      min-height: 16px;
+      font-size: 12px;
+      text-align: center;
+    }
+
     #footer {
       display: flex;
       justify-content: flex-end;
@@ -164,7 +231,22 @@
 
   <div id="unsupported" style="display:none">
     <p>このサイトは対応していません</p>
-    <small>YouTube, Twitch, AbemaTV, ニコニコ動画, TwitCasting 他 17サイト対応</small>
+  </div>
+
+  <div id="custom-url-section">
+    <div id="custom-url-divider">または URL を直接入力</div>
+    <div id="custom-url-row">
+      <input type="url" id="custom-url-input" placeholder="https://...">
+      <button id="btn-custom-play" title="再生">&#9654;</button>
+    </div>
+    <div id="custom-tool-row">
+      <select id="custom-tool-select">
+        <option value="yt-dlp">yt-dlp</option>
+        <option value="streamlink">streamlink</option>
+      </select>
+      <select id="custom-quality-select"></select>
+    </div>
+    <div id="custom-status"></div>
   </div>
 
   <div id="footer">

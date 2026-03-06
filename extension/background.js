@@ -1,4 +1,4 @@
-import { SITE_CONFIGS, detectSite, detectStreamType, selectTool } from "./sites.js";
+import { detectSite, detectStreamType, selectTool } from "./sites.js";
 
 const NATIVE_HOST_NAME = "com.stream_to_player.host";
 
@@ -8,26 +8,12 @@ const DEFAULT_SETTINGS = {
   quality: "best",
   ytdlpFormat: "bestvideo+bestaudio/best",
   toolOverride: "auto",
+  theme: "system",
 };
 
-// declarativeContent ルール設定
+// デフォルト設定の初期化
 chrome.runtime.onInstalled.addListener(async () => {
-  await chrome.declarativeContent.onPageChanged.removeRules(undefined);
-
-  const conditions = SITE_CONFIGS.flatMap(site =>
-    site.hostSuffixes.map(suffix =>
-      new chrome.declarativeContent.PageStateMatcher({
-        pageUrl: { hostSuffix: suffix },
-      })
-    )
-  );
-
-  await chrome.declarativeContent.onPageChanged.addRules([{
-    conditions,
-    actions: [new chrome.declarativeContent.ShowAction()],
-  }]);
-
-  // デフォルト設定の初期化（既存の設定は上書きしない）
+  // 既存の設定は上書きしない
   const existing = await chrome.storage.sync.get(null);
   const toSet = {};
   for (const [key, val] of Object.entries(DEFAULT_SETTINGS)) {

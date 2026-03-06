@@ -5,7 +5,7 @@ __pycache__/
 # Claude Code
 .claude/
 
-# Playwright MCP
+# Playwright MCP / test artifacts
 .playwright-mcp/
 
 # OS

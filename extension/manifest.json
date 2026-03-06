@@ -6,7 +6,7 @@
 
   "permissions": [
     "activeTab",
-    "declarativeContent",
+
     "nativeMessaging",
     "scripting",
     "storage"
@@ -24,8 +24,7 @@
       "48": "icons/icon48.png",
       "128": "icons/icon128.png"
     },
-    "default_title": "Stream to Player",
-    "default_state": "disabled"
+    "default_title": "Stream to Player"
   },
 
   "options_ui": {

@@ -12,11 +12,56 @@ const ui = {
   btnPlay: document.getElementById("btn-play"),
   status: document.getElementById("status"),
   settingsLink: document.getElementById("settings-link"),
+  customUrlInput: document.getElementById("custom-url-input"),
+  btnCustomPlay: document.getElementById("btn-custom-play"),
+  customToolSelect: document.getElementById("custom-tool-select"),
+  customQualitySelect: document.getElementById("custom-quality-select"),
+  customStatus: document.getElementById("custom-status"),
 };
+
+const CUSTOM_QUALITIES = {
+  "yt-dlp": [
+    { label: "最高画質", value: "bestvideo+bestaudio/best" },
+    { label: "1080p", value: "bestvideo[height<=1080]+bestaudio/best[height<=1080]" },
+    { label: "720p", value: "bestvideo[height<=720]+bestaudio/best[height<=720]" },
+    { label: "480p", value: "bestvideo[height<=480]+bestaudio/best[height<=480]" },
+    { label: "音声のみ", value: "bestaudio" },
+  ],
+  "streamlink": ["best", "1080p", "720p", "480p", "worst", "audio_only"],
+};
+
+function updateCustomQualities() {
+  const tool = ui.customToolSelect.value;
+  const qualities = CUSTOM_QUALITIES[tool];
+  ui.customQualitySelect.innerHTML = "";
+  if (typeof qualities[0] === "string") {
+    for (const q of qualities) {
+      const opt = document.createElement("option");
+      opt.value = q;
+      opt.textContent = q === "best" ? "最高画質 (best)" : q;
+      ui.customQualitySelect.appendChild(opt);
+    }
+  } else {
+    for (const q of qualities) {
+      const opt = document.createElement("option");
+      opt.value = q.value;
+      opt.textContent = q.label;
+      ui.customQualitySelect.appendChild(opt);
+    }
+  }
+}
 
 async function init() {
   ui.settingsLink.addEventListener("click", () => {
     chrome.runtime.openOptionsPage();
+  });
+
+  // カスタムURL機能の初期化
+  updateCustomQualities();
+  ui.customToolSelect.addEventListener("change", updateCustomQualities);
+  ui.btnCustomPlay.addEventListener("click", handleCustomPlay);
+  ui.customUrlInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") handleCustomPlay();
   });
 
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -132,6 +177,48 @@ async function handlePlay() {
 function setLoading(loading) {
   isLoading = loading;
   ui.btnPlay.disabled = loading;
+}
+
+async function handleCustomPlay() {
+  const url = ui.customUrlInput.value.trim();
+  if (!url) {
+    showCustomStatus("URLを入力してください", "error");
+    return;
+  }
+  if (!/^https?:\/\//i.test(url)) {
+    showCustomStatus("http:// または https:// で始まるURLを入力してください", "error");
+    return;
+  }
+
+  ui.btnCustomPlay.disabled = true;
+  showCustomStatus('<span class="spinner"></span>起動中...', "loading");
+
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const response = await chrome.runtime.sendMessage({
+      action: "play",
+      url,
+      tabId: tab?.id,
+      quality: ui.customQualitySelect.value,
+      tool: ui.customToolSelect.value,
+      streamType: "vod",
+    });
+
+    if (response.success) {
+      showCustomStatus("再生を開始しました", "ok");
+    } else {
+      showCustomStatus(`エラー: ${response.error}`, "error");
+    }
+  } catch (err) {
+    showCustomStatus(`エラー: ${err.message}`, "error");
+  } finally {
+    ui.btnCustomPlay.disabled = false;
+  }
+}
+
+function showCustomStatus(html, type) {
+  ui.customStatus.innerHTML = html;
+  ui.customStatus.className = `status-${type}`;
 }
 
 function showStatus(html, type) {

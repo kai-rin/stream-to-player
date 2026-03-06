@@ -35,6 +35,11 @@
 - **IPv4 強制**: streamlink `-4`、yt-dlp `--force-ipv4` (IPv6 は Twitch 等で遅い)
 - **Service Worker (MV3)**: リスナーはトップレベル登録必須。状態は `chrome.storage` に保持
 
+## テスト成果物
+
+- Playwright のスクリーンショット等は必ず `.playwright-mcp/` ディレクトリ内に保存する（例: `filename: ".playwright-mcp/screenshot.png"`）
+- `.playwright-mcp/` は `.gitignore` 対象。プロジェクトルートに一時ファイルを生成しないこと
+
 ## サイト追加方法
 
 1. `extension/sites.js` の `SITE_CONFIGS` にエントリ追加

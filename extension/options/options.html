@@ -4,17 +4,107 @@
   <meta charset="UTF-8">
   <title>Stream to Player - 設定</title>
   <style>
+    :root {
+      --bg: #f8f9fa;
+      --text: #222;
+      --text-sub: #444;
+      --text-label: #555;
+      --text-radio: #333;
+      --hint: #888;
+      --border: #ccc;
+      --hr: #ddd;
+      --input-bg: #fff;
+      --accent: #1976d2;
+      --accent-hover: #1565c0;
+      --btn-test-bg: #e8f5e9;
+      --btn-test-color: #2e7d32;
+      --btn-test-border: #a5d6a7;
+      --btn-test-hover: #c8e6c9;
+      --btn-reset-bg: #eee;
+      --btn-reset-color: #333;
+      --btn-reset-hover: #ddd;
+      --ok: #4caf50;
+      --error: #e53935;
+    }
+    [data-theme="dark"] {
+      --bg: #1a1a2e;
+      --text: #e0e0e0;
+      --text-sub: #b0b0b0;
+      --text-label: #9e9e9e;
+      --text-radio: #ccc;
+      --hint: #777;
+      --border: #444;
+      --hr: #333;
+      --input-bg: #16213e;
+      --accent: #42a5f5;
+      --accent-hover: #1e88e5;
+      --btn-test-bg: #1b3a1b;
+      --btn-test-color: #66bb6a;
+      --btn-test-border: #2e7d32;
+      --btn-test-hover: #264a26;
+      --btn-reset-bg: #2a2a3e;
+      --btn-reset-color: #ccc;
+      --btn-reset-hover: #363650;
+      --ok: #66bb6a;
+      --error: #ef5350;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #1a1a2e;
+        --text: #e0e0e0;
+        --text-sub: #b0b0b0;
+        --text-label: #9e9e9e;
+        --text-radio: #ccc;
+        --hint: #777;
+        --border: #444;
+        --hr: #333;
+        --input-bg: #16213e;
+        --accent: #42a5f5;
+        --accent-hover: #1e88e5;
+        --btn-test-bg: #1b3a1b;
+        --btn-test-color: #66bb6a;
+        --btn-test-border: #2e7d32;
+        --btn-test-hover: #264a26;
+        --btn-reset-bg: #2a2a3e;
+        --btn-reset-color: #ccc;
+        --btn-reset-hover: #363650;
+        --ok: #66bb6a;
+        --error: #ef5350;
+      }
+    }
+
     body {
       max-width: 640px;
       margin: 32px auto;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       font-size: 14px;
-      color: #222;
-      background: #f8f9fa;
+      color: var(--text);
+      background: var(--bg);
       padding: 0 16px 32px;
     }
-    h1 { font-size: 20px; border-bottom: 2px solid #1976d2; padding-bottom: 8px; }
-    h2 { font-size: 15px; color: #444; margin-top: 24px; }
+    h1 { font-size: 20px; border-bottom: 2px solid var(--accent); padding-bottom: 8px; }
+    h2 { font-size: 15px; color: var(--text-sub); margin-top: 24px; }
+
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-label);
+    }
+    .theme-toggle select {
+      padding: 3px 6px;
+      font-size: 12px;
+      background: var(--input-bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+    }
 
     .form-group {
       margin: 12px 0;
@@ -22,21 +112,23 @@
       flex-direction: column;
       gap: 4px;
     }
-    .form-group > label { font-size: 12px; color: #555; font-weight: 600; }
+    .form-group > label { font-size: 12px; color: var(--text-label); font-weight: 600; }
     input[type="text"], select {
       padding: 7px 10px;
-      border: 1px solid #ccc;
+      border: 1px solid var(--border);
       border-radius: 5px;
       font-size: 13px;
+      background: var(--input-bg);
+      color: var(--text);
     }
     input[type="text"]:focus, select:focus {
       outline: none;
-      border-color: #1976d2;
+      border-color: var(--accent);
     }
-    .hint { font-size: 11px; color: #888; }
+    .hint { font-size: 11px; color: var(--hint); }
 
     .radio-group { display: flex; gap: 16px; align-items: center; }
-    .radio-group label { font-weight: normal; color: #333; cursor: pointer; }
+    .radio-group label { font-weight: normal; color: var(--text-radio); cursor: pointer; }
 
     .btn-row { margin-top: 24px; display: flex; gap: 12px; }
     .btn {
@@ -47,12 +139,12 @@
       font-weight: 600;
       cursor: pointer;
     }
-    #btn-save   { background: #1976d2; color: white; }
-    #btn-save:hover { background: #1565c0; }
-    #btn-test   { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
-    #btn-test:hover { background: #c8e6c9; }
-    #btn-reset  { background: #eee; color: #333; }
-    #btn-reset:hover { background: #ddd; }
+    #btn-save   { background: var(--accent); color: white; }
+    #btn-save:hover { background: var(--accent-hover); }
+    #btn-test   { background: var(--btn-test-bg); color: var(--btn-test-color); border: 1px solid var(--btn-test-border); }
+    #btn-test:hover { background: var(--btn-test-hover); }
+    #btn-reset  { background: var(--btn-reset-bg); color: var(--btn-reset-color); }
+    #btn-reset:hover { background: var(--btn-reset-hover); }
 
     #status-msg {
       margin-top: 12px;
@@ -60,14 +152,23 @@
       min-height: 20px;
       white-space: pre-wrap;
     }
-    .ok    { color: #4caf50; }
-    .error { color: #e53935; }
+    .ok    { color: var(--ok); }
+    .error { color: var(--error); }
 
-    hr { border: none; border-top: 1px solid #ddd; margin: 20px 0; }
+    hr { border: none; border-top: 1px solid var(--hr); margin: 20px 0; }
   </style>
 </head>
 <body>
-  <h1>Stream to Player 設定</h1>
+  <div class="header-row">
+    <h1>Stream to Player 設定</h1>
+    <div class="theme-toggle">
+      <select id="theme-select">
+        <option value="system">システム</option>
+        <option value="light">ライト</option>
+        <option value="dark">ダーク</option>
+      </select>
+    </div>
+  </div>
 
   <h2>プレイヤー</h2>
   <div class="form-group">

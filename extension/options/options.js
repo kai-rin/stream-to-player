@@ -4,6 +4,7 @@ const DEFAULT_SETTINGS = {
   quality: "best",
   ytdlpFormat: "bestvideo+bestaudio/best",
   toolOverride: "auto",
+  theme: "system",
 };
 
 const el = {
@@ -15,11 +16,20 @@ const el = {
   toolYtdlp:         document.getElementById("tool-ytdlp"),
   qualityStreamlink: document.getElementById("quality-streamlink"),
   qualityYtdlp:      document.getElementById("quality-ytdlp"),
+  themeSelect:       document.getElementById("theme-select"),
   btnSave:           document.getElementById("btn-save"),
   btnTest:           document.getElementById("btn-test"),
   btnReset:          document.getElementById("btn-reset"),
   statusMsg:         document.getElementById("status-msg"),
 };
+
+function applyTheme(theme) {
+  if (theme === "system") {
+    document.documentElement.removeAttribute("data-theme");
+  } else {
+    document.documentElement.setAttribute("data-theme", theme);
+  }
+}
 
 async function loadSettings() {
   const s = await chrome.storage.sync.get(DEFAULT_SETTINGS);
@@ -31,6 +41,8 @@ async function loadSettings() {
   el.toolYtdlp.checked = s.toolOverride === "yt-dlp";
   el.qualityStreamlink.value = s.quality || "best";
   el.qualityYtdlp.value = s.ytdlpFormat || "bestvideo+bestaudio/best";
+  el.themeSelect.value = s.theme || "system";
+  applyTheme(s.theme || "system");
 }
 
 function collectSettings() {
@@ -42,6 +54,7 @@ function collectSettings() {
     toolOverride: el.toolAuto.checked ? "auto"
       : el.toolStreamlink.checked ? "streamlink"
       : "yt-dlp",
+    theme: el.themeSelect.value,
   };
 }
 
@@ -83,6 +96,7 @@ function showStatus(msg, type) {
   el.statusMsg.className = type;
 }
 
+el.themeSelect.addEventListener("change", () => applyTheme(el.themeSelect.value));
 el.btnSave.addEventListener("click", saveSettings);
 el.btnTest.addEventListener("click", testConnection);
 el.btnReset.addEventListener("click", resetSettings);
