@@ -4,7 +4,7 @@
 
 <div align="center">
 
-https://github.com/kai-rin/stream-to-player/releases/download/v1.1.1/promo.mp4
+https://github.com/user-attachments/assets/11a0b67f-f93a-4cfb-83d2-3e222717ba73
 
 </div>
 
