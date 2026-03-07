@@ -1,6 +1,7 @@
 import React from "react";
 import { Img, staticFile } from "remotion";
 import { COLORS, FONT_FAMILY } from "../utils/styles";
+import { SIZES } from "../utils/layout";
 
 type MockBrowserProps = {
   url: string;
@@ -14,8 +15,8 @@ export const MockBrowser: React.FC<MockBrowserProps> = ({
   url,
   title,
   children,
-  width = 1200,
-  height = 700,
+  width = SIZES.browser.width,
+  height = SIZES.browser.height,
 }) => {
   return (
     <div

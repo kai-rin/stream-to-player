@@ -1,5 +1,6 @@
 import React from "react";
 import { FONT_FAMILY } from "../utils/styles";
+import { SIZES, TYPE } from "../utils/layout";
 
 type SiteLogoBadgeProps = {
   name: string;
@@ -13,15 +14,15 @@ export const SiteLogoBadge: React.FC<SiteLogoBadgeProps> = ({
   return (
     <div
       style={{
-        width: 300,
-        height: 80,
+        width: SIZES.badge.width,
+        height: SIZES.badge.height,
         background: color,
         borderRadius: 12,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         fontFamily: FONT_FAMILY,
-        fontSize: 28,
+        fontSize: TYPE.body.fontSize,
         fontWeight: 700,
         color: "white",
         textShadow: "0 2px 4px rgba(0,0,0,0.3)",

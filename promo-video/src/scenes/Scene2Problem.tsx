@@ -1,6 +1,7 @@
 import React from "react";
 import { AbsoluteFill, useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
 import { COLORS, FONT_FAMILY } from "../utils/styles";
+import { SIZES, SPACE, TYPE } from "../utils/layout";
 import { sec } from "../utils/time";
 import { trapezoidFade, exitOpacity } from "../utils/animations";
 import { MockBrowser } from "../mocks/MockBrowser";
@@ -68,12 +69,13 @@ export const Scene2Problem: React.FC = () => {
         opacity: exit,
       }}
     >
-      {/* Browser */}
+      {/* Browser — offset upward to balance caption bar */}
       <div
         style={{
           transform: `scale(${browserScale * browserShrink})`,
           opacity: browserDim,
           transition: "none",
+          marginBottom: SIZES.captionBarHeight / 2,
         }}
       >
         <MockBrowser
@@ -110,7 +112,7 @@ export const Scene2Problem: React.FC = () => {
         >
           <div
             style={{
-              fontSize: 80,
+              fontSize: 100,
               fontWeight: 800,
               color: "white",
               textAlign: "center",
@@ -131,19 +133,19 @@ export const Scene2Problem: React.FC = () => {
           bottom: 0,
           left: 0,
           right: 0,
-          height: 140,
+          height: SIZES.captionBarHeight,
           background: "linear-gradient(transparent, rgba(0,0,0,0.85))",
           display: "flex",
           alignItems: "flex-end",
           justifyContent: "center",
-          paddingBottom: 40,
+          paddingBottom: SPACE["2xl"],
           opacity: captionOpacity,
         }}
       >
         <div
           style={{
-            fontSize: 48,
-            fontWeight: 400,
+            fontSize: TYPE.h2.fontSize,
+            fontWeight: TYPE.h2.fontWeight,
             color: "white",
             textAlign: "center",
           }}

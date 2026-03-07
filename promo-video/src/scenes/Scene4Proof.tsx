@@ -7,6 +7,7 @@ import {
   interpolate,
 } from "remotion";
 import { COLORS, FONT_FAMILY } from "../utils/styles";
+import { SIZES, SPACE, TYPE } from "../utils/layout";
 import { sec } from "../utils/time";
 import { exitOpacity } from "../utils/animations";
 import { SiteLogoBadge, SITE_DATA } from "../mocks/SiteLogoBadge";
@@ -26,17 +27,17 @@ export const Scene4Proof: React.FC = () => {
 
   // Player section
   const playerSectionProgress = spring({
-    frame: frame - sec(1.5),
+    frame: frame - sec(1),
     fps,
     config: { damping: 200 },
   });
   const playerSectionY = interpolate(playerSectionProgress, [0, 1], [20, 0]);
 
-  // Divider
-  const dividerHeight = interpolate(
-    spring({ frame: frame - sec(0.3), fps, config: { damping: 200 } }),
+  // Divider width animation
+  const dividerWidth = interpolate(
+    spring({ frame: frame - sec(0.8), fps, config: { damping: 200 } }),
     [0, 1],
-    [0, 100],
+    [0, 600],
   );
 
   // Exit
@@ -48,149 +49,146 @@ export const Scene4Proof: React.FC = () => {
         background: COLORS.bgDarkest,
         fontFamily: FONT_FAMILY,
         opacity: exit,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: SPACE["2xl"],
       }}
     >
-      {/* Two-column layout, top-aligned */}
+      {/* Sites section */}
       <div
         style={{
           display: "flex",
-          width: "100%",
-          height: "100%",
-          padding: "120px 120px",
-          gap: 0,
+          flexDirection: "column",
+          alignItems: "center",
+          gap: SPACE.lg,
         }}
       >
-        {/* Left column: Sites */}
         <div
           style={{
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 24,
+            ...TYPE.h1,
+            color: "white",
+            opacity: titleProgress,
           }}
         >
-          <div
-            style={{
-              fontSize: 56,
-              fontWeight: 700,
-              color: "white",
-              opacity: titleProgress,
-              marginBottom: 8,
-            }}
-          >
-            対応サイト
-          </div>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 14,
-            }}
-          >
-            {SITE_DATA.map((site, i) => {
-              const staggerDelay = i * 2;
-              const badgeProgress = spring({
-                frame: frame - sec(0.5) - staggerDelay,
-                fps,
-                config: { damping: 14, mass: 0.3, stiffness: 200 },
-              });
-              const badgeY = interpolate(badgeProgress, [0, 1], [20, 0]);
-              return (
-                <div
-                  key={site.name}
-                  style={{
-                    opacity: badgeProgress,
-                    transform: `translateY(${badgeY}px)`,
-                  }}
-                >
-                  <SiteLogoBadge name={site.name} color={site.color} />
-                </div>
-              );
-            })}
-          </div>
+          対応サイト
         </div>
-
-        {/* Center divider */}
-        <div
-          style={{
-            width: 1,
-            background: "rgba(255,255,255,0.15)",
-            height: `${dividerHeight}%`,
-            alignSelf: "center",
-          }}
-        />
-
-        {/* Right column: Players */}
-        <div
-          style={{
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 24,
-            opacity: playerSectionProgress,
-            transform: `translateY(${playerSectionY}px)`,
-          }}
-        >
-          <div
-            style={{
-              fontSize: 56,
-              fontWeight: 700,
-              color: "white",
-              marginBottom: 8,
-            }}
-          >
-            対応プレイヤー
-          </div>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 14,
-            }}
-          >
-            {[
-              { name: "mpv", sub: "推奨" },
-              { name: "VLC", sub: "" },
-            ].map((player) => (
+        {/* Row 1: 3 sites */}
+        <div style={{ display: "flex", gap: SPACE.lg }}>
+          {SITE_DATA.slice(0, 3).map((site, i) => {
+            const badgeProgress = spring({
+              frame: frame - sec(0.5) - i * 2,
+              fps,
+              config: { damping: 14, mass: 0.3, stiffness: 200 },
+            });
+            const badgeY = interpolate(badgeProgress, [0, 1], [20, 0]);
+            return (
               <div
-                key={player.name}
+                key={site.name}
                 style={{
-                  width: 300,
-                  height: 80,
-                  background: "rgba(255,255,255,0.08)",
-                  border: "1px solid rgba(255,255,255,0.2)",
-                  borderRadius: 12,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 12,
+                  opacity: badgeProgress,
+                  transform: `translateY(${badgeY}px)`,
                 }}
               >
+                <SiteLogoBadge name={site.name} color={site.color} />
+              </div>
+            );
+          })}
+        </div>
+        {/* Row 2: 2 sites */}
+        <div style={{ display: "flex", gap: SPACE.lg }}>
+          {SITE_DATA.slice(3).map((site, i) => {
+            const badgeProgress = spring({
+              frame: frame - sec(0.5) - (i + 3) * 2,
+              fps,
+              config: { damping: 14, mass: 0.3, stiffness: 200 },
+            });
+            const badgeY = interpolate(badgeProgress, [0, 1], [20, 0]);
+            return (
+              <div
+                key={site.name}
+                style={{
+                  opacity: badgeProgress,
+                  transform: `translateY(${badgeY}px)`,
+                }}
+              >
+                <SiteLogoBadge name={site.name} color={site.color} />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Horizontal divider */}
+      <div
+        style={{
+          width: dividerWidth,
+          height: 1,
+          background: "rgba(255,255,255,0.15)",
+        }}
+      />
+
+      {/* Players section */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: SPACE.lg,
+          opacity: playerSectionProgress,
+          transform: `translateY(${playerSectionY}px)`,
+        }}
+      >
+        <div
+          style={{
+            ...TYPE.h1,
+            color: "white",
+          }}
+        >
+          対応プレイヤー
+        </div>
+        <div style={{ display: "flex", gap: SPACE.lg }}>
+          {[
+            { name: "mpv", sub: "推奨" },
+            { name: "VLC", sub: "" },
+          ].map((player) => (
+            <div
+              key={player.name}
+              style={{
+                width: SIZES.badge.width,
+                height: SIZES.badge.height,
+                background: "rgba(255,255,255,0.08)",
+                border: "1px solid rgba(255,255,255,0.2)",
+                borderRadius: 12,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 12,
+              }}
+            >
+              <span
+                style={{
+                  fontSize: TYPE.body.fontSize,
+                  fontWeight: 700,
+                  color: "white",
+                }}
+              >
+                {player.name}
+              </span>
+              {player.sub && (
                 <span
                   style={{
-                    fontSize: 28,
-                    fontWeight: 700,
-                    color: "white",
+                    fontSize: TYPE.small.fontSize,
+                    color: COLORS.textSecondary,
+                    fontWeight: 500,
                   }}
                 >
-                  {player.name}
+                  {player.sub}
                 </span>
-                {player.sub && (
-                  <span
-                    style={{
-                      fontSize: 16,
-                      color: COLORS.textSecondary,
-                      fontWeight: 500,
-                    }}
-                  >
-                    {player.sub}
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
+              )}
+            </div>
+          ))}
         </div>
       </div>
     </AbsoluteFill>

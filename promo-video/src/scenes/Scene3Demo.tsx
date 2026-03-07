@@ -8,6 +8,7 @@ import {
   Sequence,
 } from "remotion";
 import { COLORS, FONT_FAMILY } from "../utils/styles";
+import { SAFE_AREA, SIZES, SPACE, TYPE } from "../utils/layout";
 import { sec } from "../utils/time";
 import { exitOpacity } from "../utils/animations";
 import { MockBrowser } from "../mocks/MockBrowser";
@@ -33,13 +34,13 @@ export const Scene3Demo: React.FC = () => {
   const browserX = interpolate(
     frame,
     [PLAYER_OPEN, PLAYER_OPEN + sec(1)],
-    [0, -380],
+    [0, -300],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
   const browserScale = interpolate(
     frame,
     [PLAYER_OPEN, PLAYER_OPEN + sec(1)],
-    [1, 0.65],
+    [1, 0.7],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
 
@@ -125,9 +126,9 @@ export const Scene3Demo: React.FC = () => {
       <div
         style={{
           position: "absolute",
-          top: 40,
-          right: 60,
-          fontSize: 28,
+          top: SAFE_AREA.title.y,
+          right: SAFE_AREA.title.x,
+          fontSize: TYPE.body.fontSize,
           color: COLORS.textSecondary,
           fontWeight: 600,
           zIndex: 10,
@@ -136,11 +137,11 @@ export const Scene3Demo: React.FC = () => {
         {frame < FEATURES_START ? step : ""}
       </div>
 
-      {/* Browser + Popup container */}
+      {/* Browser + Popup container — offset upward to balance caption bar */}
       <div
         style={{
           position: "absolute",
-          top: "50%",
+          top: "46%",
           left: "50%",
           transform: `translate(calc(-50% + ${browserX}px), -50%) scale(${browserScale})`,
         }}
@@ -203,11 +204,11 @@ export const Scene3Demo: React.FC = () => {
         <div
           style={{
             position: "absolute",
-            top: "50%",
-            right: 60,
+            top: "46%",
+            right: SAFE_AREA.action.x,
             transform: `translateY(-50%) translateX(${playerTranslateX}px)`,
-            width: 720,
-            height: 480,
+            width: SIZES.player.width,
+            height: SIZES.player.height,
           }}
         >
           <Sequence from={0}>
@@ -219,16 +220,18 @@ export const Scene3Demo: React.FC = () => {
         </div>
       )}
 
-      {/* Feature badges */}
+      {/* Feature badges — vertical stack for readability */}
       {frame >= FEATURES_START && (
         <div
           style={{
             position: "absolute",
-            bottom: 160,
+            bottom: SPACE["2xl"],
             left: "50%",
             transform: "translateX(-50%)",
             display: "flex",
-            gap: 32,
+            flexDirection: "column",
+            alignItems: "center",
+            gap: SPACE.lg,
           }}
         >
           {features.map((f, i) => {
@@ -242,21 +245,17 @@ export const Scene3Demo: React.FC = () => {
               <div
                 key={i}
                 style={{
-                  background: "rgba(255,255,255,0.08)",
-                  border: "1px solid rgba(255,255,255,0.15)",
-                  borderRadius: 12,
-                  padding: "16px 28px",
                   display: "flex",
                   alignItems: "center",
-                  gap: 12,
+                  gap: SPACE.md,
                   opacity: badgeProgress,
                   transform: `translateY(${badgeY}px)`,
                 }}
               >
-                <span style={{ fontSize: 28 }}>{f.emoji}</span>
+                <span style={{ fontSize: TYPE.h3.fontSize }}>{f.emoji}</span>
                 <span
                   style={{
-                    fontSize: 24,
+                    fontSize: TYPE.h3.fontSize,
                     color: "white",
                     fontWeight: 600,
                   }}
@@ -278,16 +277,16 @@ export const Scene3Demo: React.FC = () => {
             bottom: 0,
             left: 0,
             right: 0,
-            height: 120,
+            height: SIZES.captionBarHeight,
             background: "linear-gradient(transparent, rgba(0,0,0,0.85))",
             display: "flex",
             alignItems: "flex-end",
             justifyContent: "center",
-            paddingBottom: 32,
+            paddingBottom: SPACE.xl,
             opacity: captionOpacity,
           }}
         >
-          <div style={{ fontSize: 44, color: "white", textAlign: "center" }}>
+          <div style={{ fontSize: TYPE.h2.fontSize, color: "white", textAlign: "center" }}>
             {captionText}
           </div>
         </div>

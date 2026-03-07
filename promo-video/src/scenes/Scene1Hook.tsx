@@ -9,6 +9,7 @@ import {
   interpolate,
 } from "remotion";
 import { COLORS, FONT_FAMILY } from "../utils/styles";
+import { SIZES, SPACE, TYPE } from "../utils/layout";
 import { sec } from "../utils/time";
 import { exitOpacity } from "../utils/animations";
 
@@ -58,18 +59,17 @@ export const Scene1Hook: React.FC = () => {
       <Img
         src={staticFile("icon128.png")}
         style={{
-          width: 120,
-          height: 120,
+          width: SIZES.iconLg,
+          height: SIZES.iconLg,
           transform: `scale(${iconScale}) translateY(${iconY}px)`,
-          marginBottom: 24,
+          marginBottom: SPACE["2xl"],
         }}
       />
 
       {/* Headline */}
       <div
         style={{
-          fontSize: 96,
-          fontWeight: 700,
+          ...TYPE.display,
           color: "white",
           opacity: headlineProgress,
           transform: `translateY(${headlineY}px)`,
@@ -82,10 +82,10 @@ export const Scene1Hook: React.FC = () => {
       {/* Subtext */}
       <div
         style={{
-          fontSize: 44,
+          fontSize: TYPE.h2.fontSize,
           color: COLORS.textSecondary,
           opacity: subtextOpacity,
-          marginTop: 16,
+          marginTop: SPACE.xl,
           textAlign: "center",
         }}
       >

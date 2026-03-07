@@ -9,6 +9,7 @@ import {
   interpolate,
 } from "remotion";
 import { COLORS, FONT_FAMILY } from "../utils/styles";
+import { SIZES, SPACE, TYPE } from "../utils/layout";
 import { sec } from "../utils/time";
 
 export const Scene5CTA: React.FC = () => {
@@ -55,18 +56,17 @@ export const Scene5CTA: React.FC = () => {
       <Img
         src={staticFile("icon128.png")}
         style={{
-          width: 160,
-          height: 160,
+          width: SIZES.iconLg,
+          height: SIZES.iconLg,
           transform: `scale(${iconScale})`,
-          marginBottom: 32,
+          marginBottom: SPACE["2xl"],
         }}
       />
 
       {/* Title */}
       <div
         style={{
-          fontSize: 96,
-          fontWeight: 700,
+          ...TYPE.display,
           color: "white",
           opacity: titleProgress,
           transform: `translateY(${titleY}px)`,
@@ -78,10 +78,10 @@ export const Scene5CTA: React.FC = () => {
       {/* Subtext */}
       <div
         style={{
-          fontSize: 44,
+          fontSize: TYPE.h2.fontSize,
           color: COLORS.textSecondary,
           opacity: subtextOpacity,
-          marginTop: 16,
+          marginTop: SPACE.xl,
         }}
       >
         ブラウザ動画をもっと自由に
@@ -90,12 +90,12 @@ export const Scene5CTA: React.FC = () => {
       {/* GitHub URL */}
       <div
         style={{
-          fontSize: 36,
+          fontSize: TYPE.h3.fontSize,
           color: COLORS.accentBlue,
           opacity: urlOpacity,
-          marginTop: 32,
+          marginTop: SPACE["2xl"],
           background: "rgba(255,255,255,0.05)",
-          padding: "12px 32px",
+          padding: `${SPACE.md}px ${SPACE["2xl"]}px`,
           borderRadius: 8,
           border: "1px solid rgba(255,255,255,0.1)",
         }}
