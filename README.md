@@ -2,6 +2,12 @@
 
 ストリーミングサイトの動画を mpv や VLC で直接再生する Chrome 拡張機能。
 
+<div align="center">
+  <video src="https://github.com/kai-rin/stream-to-player/raw/main/promo-video/out/promo.mp4" width="720" autoplay loop muted playsinline></video>
+  <br>
+  <sub>▶ 動画が表示されない場合は <a href="promo-video/out/promo.mp4">こちらからダウンロード</a></sub>
+</div>
+
 ### なぜ外部プレイヤーで再生するのか
 
 mpv や VLC などの専用プレイヤーに切り替えると:
