@@ -55,11 +55,9 @@ const siteTests = [
   // TikTok
   ["https://www.tiktok.com/@user/video/123", "tiktok"],
   ["https://www.tiktok.com/@user/live", "tiktok"],
-  // NHK
-  ["https://www.nhk.or.jp/p/program/ts/abc", "nhk"],
-  ["https://www.nhk.or.jp/school/movie/bangumi.cgi", "nhk"],
-  ["https://www.nhk.or.jp/radiru/player/", "nhk"],
-  ["https://plus.nhk.jp/watch/abc123", "nhk"],
+  // NHK (2026-03 削除: Widevine DRM 導入により非対応)
+  ["https://www.nhk.or.jp/p/program/ts/abc", null],
+  ["https://plus.nhk.jp/watch/abc123", null],
   // TwitCasting
   ["https://twitcasting.tv/user123", "twitcasting"],
   ["https://twitcasting.tv/user123/movie/789", "twitcasting"],
@@ -125,9 +123,6 @@ const streamTypeTests = [
   // TikTok
   ["https://www.tiktok.com/@user/video/123", "tiktok", "vod"],
   ["https://www.tiktok.com/@user/live", "tiktok", "live"],
-  // NHK
-  ["https://www.nhk.or.jp/p/program/ts/abc", "nhk", "vod"],
-  ["https://www.nhk.or.jp/radiru/toppage/player/", "nhk", "live"],
   // TwitCasting
   ["https://twitcasting.tv/user123", "twitcasting", "live"],
   ["https://twitcasting.tv/user123/movie/789", "twitcasting", "vod"],
@@ -164,7 +159,8 @@ const autoPrefs = { toolOverride: "auto" };
 const toolTests = [
   // 自動選択
   ["youtube", "vod", autoPrefs, "yt-dlp"],
-  ["youtube", "live", autoPrefs, "streamlink"],
+  // streamlink の YouTube プラグイン破損により live も yt-dlp
+  ["youtube", "live", autoPrefs, "yt-dlp"],
   ["twitch", "live", autoPrefs, "streamlink"],
   ["twitch", "vod", autoPrefs, "yt-dlp"],
   ["abema", "live", autoPrefs, "streamlink"],
@@ -179,7 +175,6 @@ const toolTests = [
   ["twitter", "live", autoPrefs, "yt-dlp"],
   ["tiktok", "vod", autoPrefs, "yt-dlp"],
   ["tiktok", "live", autoPrefs, "yt-dlp"],
-  ["nhk", "vod", autoPrefs, "yt-dlp"],
   ["twitcasting", "live", autoPrefs, "streamlink"],
   ["twitcasting", "vod", autoPrefs, "yt-dlp"],
   ["fc2", "live", autoPrefs, "yt-dlp"],

@@ -13,7 +13,8 @@ export const SITE_CONFIGS = [
       /youtu\.be\//,
     ],
     isLivePattern: /youtube\.com\/(live\/|@[^/]+\/live)/,
-    preferredTool: { live: "streamlink", vod: "yt-dlp" },
+    // streamlink の YouTube プラグインは上流で破損 (youtubei API 400) のため live も yt-dlp
+    preferredTool: { live: "yt-dlp", vod: "yt-dlp" },
     streamlinkQualities: ["best", "1080p", "720p", "480p", "360p", "worst"],
     ytdlpFormats: [
       { label: "最高画質", value: "bestvideo+bestaudio/best" },

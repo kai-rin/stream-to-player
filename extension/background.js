@@ -121,12 +121,20 @@ async function handlePlay(message) {
       }
     });
 
+    // quality は選択ツールに対応するフィールドにのみ渡す。
+    // ホスト側でツールが切り替わった場合 (フォールバック/サイト制限) に
+    // 異種フォーマット文字列が流用されるのを防ぐ
+    const tool = message.tool || settings.toolOverride;
     port.postMessage({
       action: "play",
       url: message.url,
-      tool: message.tool || settings.toolOverride,
-      quality: message.quality || settings.quality,
-      ytdlpFormat: message.quality || settings.ytdlpFormat,
+      tool,
+      quality: tool === "yt-dlp"
+        ? settings.quality
+        : (message.quality || settings.quality),
+      ytdlpFormat: tool === "streamlink"
+        ? settings.ytdlpFormat
+        : (message.quality || settings.ytdlpFormat),
       player: settings.player,
       playerPath: settings.playerPath,
       streamType: message.streamType || "vod",

@@ -107,8 +107,9 @@ SITE_TOOL_RULES = {
     "abema.tv":          {"live": "streamlink", "vod": "streamlink", "streamlink_only": True},
     "radiko.jp":         {"live": "streamlink", "vod": "streamlink", "streamlink_only": True},
     "tver.jp":           {"live": "yt-dlp",     "vod": "yt-dlp",     "ytdlp_only": True},
-    "youtube.com":       {"live": "streamlink", "vod": "yt-dlp"},
-    "youtu.be":          {"live": "streamlink", "vod": "yt-dlp"},
+    # streamlink の YouTube プラグインは上流で破損 (youtubei API 400) のため live も yt-dlp
+    "youtube.com":       {"live": "yt-dlp",     "vod": "yt-dlp"},
+    "youtu.be":          {"live": "yt-dlp",     "vod": "yt-dlp"},
     "twitch.tv":         {"live": "streamlink", "vod": "yt-dlp"},
     "nicovideo.jp":      {"live": "streamlink", "vod": "yt-dlp"},
     "twitter.com":       {"live": "yt-dlp",     "vod": "yt-dlp",     "ytdlp_only": True},
@@ -179,14 +180,16 @@ def extract_domain(url):
         return ""
 
 
-def select_tool_for_url(url, stream_type, user_pref):
+def _rules_for_url(url):
     domain = extract_domain(url)
-
-    rules = {}
     for key in SITE_TOOL_RULES:
         if domain.endswith(key):
-            rules = SITE_TOOL_RULES[key]
-            break
+            return SITE_TOOL_RULES[key]
+    return {}
+
+
+def select_tool_for_url(url, stream_type, user_pref):
+    rules = _rules_for_url(url)
 
     if user_pref and user_pref != "auto":
         if user_pref == "streamlink" and rules.get("ytdlp_only"):
@@ -203,7 +206,7 @@ def select_tool_for_url(url, stream_type, user_pref):
 
 # === コマンド構築 ===
 
-def build_play_cmd_streamlink(url, quality, player_name, player_path, sl_path):
+def build_play_cmd_streamlink(url, quality, player_name, player_path, sl_path, pipe_name=None):
     cmd = [sl_path, url, quality or "best",
            "-4",                 # IPv6 は Twitch Usher 等で極端に遅いため IPv4 強制
            "--http-timeout", "15"]
@@ -211,7 +214,13 @@ def build_play_cmd_streamlink(url, quality, player_name, player_path, sl_path):
     if player:
         cmd += ["--player", player]
     if player_name == "mpv":
-        cmd += ["--player-args", "--force-window --autofit=1920x1080 --title={title}"]
+        player_args = "--force-window --autofit=1920x1080 --idle=no --title={title}"
+        if pipe_name:
+            # streamlink は --player-args を shlex.split (posix) で分割するため
+            # Windows named pipe のバックスラッシュは二重化して渡す
+            escaped_pipe = pipe_name.replace("\\", "\\\\")
+            player_args += f" --input-ipc-server={escaped_pipe}"
+        cmd += ["--player-args", player_args]
     return cmd
 
 
@@ -229,22 +238,43 @@ def _ssl_cert_env():
     return env
 
 
+class StreamResolveError(RuntimeError):
+    """yt-dlp がコンテンツ由来のエラーを返した (フォールバックしても解決しない)"""
+
+
+def _extract_ytdlp_error(stderr):
+    """yt-dlp の stderr から ERROR 行を抽出する。
+    WARNING (バージョン警告等) がユーザー向けエラー表示を埋めるのを防ぐ。"""
+    errors = [line.strip() for line in (stderr or "").splitlines()
+              if line.strip().startswith("ERROR")]
+    return " / ".join(errors) if errors else (stderr or "").strip()
+
+
 def _resolve_urls_ytdlp(url, fmt, timeout=15):
     """yt-dlp -g でストリームURLを事前解決（mpv内蔵の -J 方式より大幅に高速）"""
     ytdlp = find_tool("yt-dlp")
     if not ytdlp:
         raise FileNotFoundError("yt-dlp が見つかりません")
     log.info("Resolving URL with yt-dlp -g: fmt=%s", fmt)
+    cmd = [ytdlp, "-g", "-f", fmt, "--no-playlist", "--force-ipv4"]
+    # yt-dlp 2026.x は YouTube 抽出に JS runtime が必要 (未指定だとフォーマット欠落)
+    if shutil.which("node"):
+        cmd += ["--js-runtimes", "node"]
+    cmd.append(url)
     t0 = time.time()
     result = subprocess.run(
-        [ytdlp, "-g", "-f", fmt, "--no-playlist", "--force-ipv4", url],
+        cmd,
         capture_output=True, text=True, timeout=timeout,
         creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
         env=_ssl_cert_env(),
     )
     elapsed = time.time() - t0
     if result.returncode != 0:
-        raise RuntimeError(f"yt-dlp URL解決失敗: {result.stderr.strip()}")
+        err = _extract_ytdlp_error(result.stderr)
+        if err.startswith("ERROR:"):
+            # 抽出器のエラー (配信オフライン/動画削除等) は mpv 内蔵でも再発する
+            raise StreamResolveError(f"yt-dlp URL解決失敗: {err}")
+        raise RuntimeError(f"yt-dlp URL解決失敗: {err}")
     urls = [u.strip() for u in result.stdout.strip().split("\n") if u.strip()]
     if not urls:
         raise RuntimeError("yt-dlp returned no URLs")
@@ -258,7 +288,9 @@ def _build_cmd_ytdlp_preresolved(url, fmt, player, player_name, stream_type, pip
     stream_urls = _resolve_urls_ytdlp(url, fmt_arg)
 
     if player_name == "mpv":
-        cmd = [player, "--force-window=immediate", "--autofit=1920x1080"]
+        # --idle=no: ユーザー設定に idle=yes があっても再生失敗時にゴースト
+        # ウィンドウを残さない (拡張からの起動は常に単一URL再生のため)
+        cmd = [player, "--force-window=immediate", "--autofit=1920x1080", "--idle=no"]
         cmd.append(f"--log-file={LOG_DIR / 'mpv.log'}")
         if len(stream_urls) >= 2:
             cmd.append(f"--audio-file={stream_urls[1]}")
@@ -267,21 +299,25 @@ def _build_cmd_ytdlp_preresolved(url, fmt, player, player_name, stream_type, pip
             cmd.append(f"--input-ipc-server={pipe_name}")
         return cmd
     else:
-        return [player, stream_urls[0]]
+        # VLC: 映像/音声が別URLの場合は --input-slave で音声を同時再生
+        cmd = [player, stream_urls[0]]
+        if len(stream_urls) >= 2:
+            cmd.append(f"--input-slave={stream_urls[1]}")
+        return cmd
 
 
 def _build_cmd_ytdlp_direct(url, fmt, player, player_name, stream_type, pipe_name):
     """mpv 内蔵の yt-dlp に URL 解決を委ねる (フォールバック、遅いが確実)"""
     fmt_arg = "best" if stream_type == "live" else (fmt or "bestvideo+bestaudio/best")
     if player_name == "mpv":
-        cmd = [player, "--force-window=immediate", "--autofit=1920x1080",
+        cmd = [player, "--force-window=immediate", "--autofit=1920x1080", "--idle=no",
                f"--log-file={LOG_DIR / 'mpv.log'}",
                f"--ytdl-format={fmt_arg}", url]
         if pipe_name:
             cmd.append(f"--input-ipc-server={pipe_name}")
         return cmd
     else:
-        raise RuntimeError("yt-dlp URL resolution failed and player is not mpv")
+        raise RuntimeError("yt-dlp のURL解決に失敗しました (mpv 以外はフォールバック再生非対応)")
 
 
 # === mpv IPC ===
@@ -505,8 +541,11 @@ _CREATE_NO_WINDOW = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 
 def _play_via_streamlink(url, quality, player_name, player_path, sl_path):
     """streamlink 経由で再生（ライブ配信向け）
     streamlink の出力ログを監視し、プレイヤー起動/エラーを検知してからレスポンスを返す。
-    stdout はファイル出力 (パイプではない) のため、ホスト終了後も streamlink は影響を受けない。"""
-    cmd = build_play_cmd_streamlink(url, quality, player_name, player_path, sl_path)
+    stdout はファイル出力 (パイプではない) のため、ホスト終了後も streamlink は影響を受けない。
+    成功時は None、失敗時はエラーメッセージ文字列を返す (呼び出し側でフォールバック判断)。"""
+    pipe_name = _make_ipc_name() if player_name == "mpv" else None
+    cmd = build_play_cmd_streamlink(url, quality, player_name, player_path, sl_path,
+                                    pipe_name)
     log.info("Executing (streamlink): %s", cmd)
 
     sl_log = LOG_DIR / "streamlink.log"
@@ -528,23 +567,23 @@ def _play_via_streamlink(url, quality, player_name, player_path, sl_path):
         if rc is not None:
             content = _read_sl_log(sl_log)
             log.error("streamlink exited (rc=%d): %s", rc, content[:500])
-            send_message({"success": False,
-                          "error": f"streamlink: {content[-200:] or f'exit code {rc}'}"})
-            return
+            return f"streamlink: {_extract_sl_error(content, rc)}"
 
         content = _read_sl_log(sl_log)
 
         if "Starting player:" in content:
             log.info("streamlink: player launch detected")
             send_message({"success": True, "pid": proc.pid, "tool": "streamlink"})
-            return
+            # mpv IPC で再生開始を検知し元動画を停止させる (yt-dlp パスと同様)
+            _detect_and_notify_playback(pipe_name, proc)
+            return None
 
         for line in content.split("\n"):
             line = line.strip()
             if line.startswith("error:") or "[cli][error]" in line:
                 log.error("streamlink error: %s", line)
-                send_message({"success": False, "error": f"streamlink: {line[:200]}"})
-                return
+                proc.terminate()
+                return f"streamlink: {line[:200]}"
 
         time.sleep(0.5)
 
@@ -553,8 +592,7 @@ def _play_via_streamlink(url, quality, player_name, player_path, sl_path):
     log.warning("streamlink monitoring timed out (30s), last output: %s", content[-200:])
     # プロセスを終了させる
     proc.terminate()
-    send_message({"success": False,
-                  "error": "streamlink 応答なし (30秒) — ストリームがオフラインの可能性があります"})
+    return "streamlink 応答なし (30秒) — ストリームがオフラインの可能性があります"
 
 
 def _read_sl_log(path):
@@ -563,6 +601,19 @@ def _read_sl_log(path):
         return path.read_text(encoding="utf-8", errors="replace")
     except OSError:
         return ""
+
+
+def _extract_sl_error(content, rc=None):
+    """streamlink の出力からエラー行を抽出する (末尾200文字の機械的スライスだと
+    行の途中で切れて意味不明な表示になるため)"""
+    lines = [line.strip() for line in content.splitlines()
+             if line.strip().startswith("error:") or "[cli][error]" in line]
+    if lines:
+        return lines[-1][:200]
+    tail = content[-200:].strip()
+    if tail:
+        return tail
+    return f"exit code {rc}" if rc is not None else "不明なエラー"
 
 
 def _play_via_ytdlp(url, fmt, player_name, player_path, stream_type):
@@ -574,7 +625,13 @@ def _play_via_ytdlp(url, fmt, player_name, player_path, stream_type):
     try:
         cmd = _build_cmd_ytdlp_preresolved(url, fmt, player, player_name,
                                             stream_type, pipe_name)
+    except StreamResolveError:
+        # 配信オフライン/動画削除等: フォールバックせずユーザーにエラーを提示
+        raise
     except Exception as e:
+        if player_name != "mpv":
+            # mpv 以外は内蔵 yt-dlp フォールバックがないため元エラーを提示
+            raise RuntimeError(f"{e}") from e
         log.warning("yt-dlp pre-resolution failed (%s), falling back to mpv internal", e)
         cmd = _build_cmd_ytdlp_direct(url, fmt, player, player_name,
                                        stream_type, pipe_name)
@@ -608,9 +665,17 @@ def handle_play(msg):
         if tool == "streamlink":
             sl_path = find_tool("streamlink")
             if sl_path:
-                _play_via_streamlink(url, quality, player, player_path, sl_path)
-                return
-            log.warning("streamlink not found, falling back to yt-dlp")
+                sl_error = _play_via_streamlink(url, quality, player, player_path,
+                                                sl_path)
+                if sl_error is None:
+                    return
+                if _rules_for_url(url).get("streamlink_only"):
+                    # yt-dlp 非対応サイトはフォールバックせずエラーを返す
+                    send_message({"success": False, "error": sl_error})
+                    return
+                log.warning("streamlink failed (%s), falling back to yt-dlp", sl_error)
+            else:
+                log.warning("streamlink not found, falling back to yt-dlp")
 
         _play_via_ytdlp(url, ytdlp_fmt, player, player_path, stream_type)
 

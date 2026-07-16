@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "native-host"))
+import stream_to_player_host as host
 from stream_to_player_host import select_tool_for_url, extract_domain
 
 passed = 0
@@ -67,7 +68,8 @@ auto_tests = [
     # (url, stream_type, user_pref, expected_tool)
     # YouTube
     ("https://www.youtube.com/watch?v=abc", "vod", "auto", "yt-dlp"),
-    ("https://www.youtube.com/live/abc", "live", "auto", "streamlink"),
+    # streamlink の YouTube プラグイン破損により live も yt-dlp
+    ("https://www.youtube.com/live/abc", "live", "auto", "yt-dlp"),
     ("https://youtu.be/abc", "vod", "auto", "yt-dlp"),
     # Twitch
     ("https://www.twitch.tv/streamer", "live", "auto", "streamlink"),
@@ -143,6 +145,102 @@ override_tests = [
 for url, stream_type, pref, expected in override_tests:
     actual = select_tool_for_url(url, stream_type, pref)
     assert_eq(actual, expected, f"{url} override={pref}")
+
+# === streamlink コマンド構築 ===
+section("コマンド構築 (build_play_cmd_streamlink)")
+
+import shlex
+
+# mpv + IPC pipe: streamlink は --player-args を shlex.split (posix) で分割するため、
+# named pipe のバックスラッシュが分割後も生き残ることを検証する
+cmd = host.build_play_cmd_streamlink(
+    "https://twitch.tv/x", "best", "mpv", "", "streamlink",
+    pipe_name=r"\\.\pipe\stp-test")
+player_args = cmd[cmd.index("--player-args") + 1]
+tokens = shlex.split(player_args)
+assert_eq(r"--input-ipc-server=\\.\pipe\stp-test" in tokens, True,
+          "pipe name survives shlex.split")
+assert_eq("--force-window" in tokens, True, "force-window present")
+
+# pipe_name なし → input-ipc-server を含まない
+cmd = host.build_play_cmd_streamlink(
+    "https://twitch.tv/x", "best", "mpv", "", "streamlink")
+player_args = cmd[cmd.index("--player-args") + 1]
+assert_eq("--input-ipc-server" in player_args, False, "no ipc without pipe_name")
+
+# IPv4 強制フラグ
+assert_eq("-4" in cmd, True, "IPv4 forced")
+
+# === yt-dlp 事前解決コマンド構築 ===
+section("コマンド構築 (_build_cmd_ytdlp_preresolved)")
+
+_orig_resolve = host._resolve_urls_ytdlp
+
+# 映像+音声が別URLのケース
+host._resolve_urls_ytdlp = lambda url, fmt, timeout=15: ["http://video", "http://audio"]
+
+# mpv: --audio-file で音声を渡す
+cmd = host._build_cmd_ytdlp_preresolved(
+    "https://example.com/v", "best", "mpv.exe", "mpv", "vod", None)
+assert_eq("--audio-file=http://audio" in cmd, True, "mpv: audio-file passed")
+assert_eq(cmd[-1], "http://video", "mpv: video URL last")
+
+# VLC: --input-slave で音声を渡す (分離URLでの無音バグの回帰テスト)
+cmd = host._build_cmd_ytdlp_preresolved(
+    "https://example.com/v", "best", "vlc.exe", "vlc", "vod", None)
+assert_eq(cmd, ["vlc.exe", "http://video", "--input-slave=http://audio"],
+          "vlc: input-slave for separate audio")
+
+# 単一URLのケース: VLC に input-slave を付けない
+host._resolve_urls_ytdlp = lambda url, fmt, timeout=15: ["http://muxed"]
+cmd = host._build_cmd_ytdlp_preresolved(
+    "https://example.com/v", "best", "vlc.exe", "vlc", "vod", None)
+assert_eq(cmd, ["vlc.exe", "http://muxed"], "vlc: single muxed URL")
+
+host._resolve_urls_ytdlp = _orig_resolve
+
+# === yt-dlp エラー抽出 ===
+section("エラー抽出 (_extract_ytdlp_error)")
+
+stderr_sample = """WARNING: Your yt-dlp version (2026.03.03) is older than 90 days!
+         It is strongly recommended to always use the latest version.
+WARNING: [youtube] No supported JavaScript runtime could be found.
+ERROR: [youtube] abc123: Video unavailable"""
+assert_eq(host._extract_ytdlp_error(stderr_sample),
+          "ERROR: [youtube] abc123: Video unavailable",
+          "ERROR line extracted, WARNINGs dropped")
+assert_eq(host._extract_ytdlp_error("some raw failure text"),
+          "some raw failure text", "no ERROR line → raw text")
+assert_eq(host._extract_ytdlp_error(""), "", "empty stderr")
+assert_eq(host._extract_ytdlp_error(None), "", "None stderr")
+
+# === streamlink エラー抽出 ===
+section("エラー抽出 (_extract_sl_error)")
+
+sl_output = """[cli][info] Found matching plugin youtube for URL https://example.com
+error: Unable to open URL: https://www.youtube.com/youtubei/v1/player (400 Client Error)"""
+assert_eq(host._extract_sl_error(sl_output, rc=1),
+          "error: Unable to open URL: https://www.youtube.com/youtubei/v1/player (400 Client Error)",
+          "error line extracted (not mid-line slice)")
+assert_eq(host._extract_sl_error("", rc=1), "exit code 1", "empty output → exit code")
+assert_eq(host._extract_sl_error("some tail text"), "some tail text", "no error line → tail")
+
+# === mpv ゴーストウィンドウ防止 (--idle=no) ===
+section("mpv --idle=no")
+
+host._resolve_urls_ytdlp = lambda url, fmt, timeout=15: ["http://video"]
+cmd = host._build_cmd_ytdlp_preresolved(
+    "https://example.com/v", "best", "mpv.exe", "mpv", "vod", None)
+assert_eq("--idle=no" in cmd, True, "preresolved: idle=no")
+cmd = host._build_cmd_ytdlp_direct(
+    "https://example.com/v", "best", "mpv.exe", "mpv", "vod", None)
+assert_eq("--idle=no" in cmd, True, "direct: idle=no")
+host._resolve_urls_ytdlp = _orig_resolve
+
+cmd = host.build_play_cmd_streamlink(
+    "https://twitch.tv/x", "best", "mpv", "", "streamlink")
+assert_eq("--idle=no" in cmd[cmd.index("--player-args") + 1], True,
+          "streamlink player-args: idle=no")
 
 # === 結果 ===
 print(f"\n{'=' * 40}")
