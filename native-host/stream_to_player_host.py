@@ -148,6 +148,14 @@ def send_message(payload):
     sys.stdout.buffer.flush()
 
 
+def send_progress(message):
+    """処理状況をポップアップに通知する (ポート切断済みでも失敗させない)"""
+    try:
+        send_message({"event": "progress", "message": message})
+    except (BrokenPipeError, OSError):
+        pass
+
+
 # === ツール検索 ===
 
 def find_tool(tool_name, override_path=""):
@@ -622,6 +630,7 @@ def _play_via_ytdlp(url, fmt, player_name, player_path, stream_type):
     pipe_name = _make_ipc_name() if player_name == "mpv" else None
 
     # URL 事前解決を試行。失敗したら mpv 内蔵の yt-dlp にフォールバック
+    send_progress("yt-dlp で URL を解決中...")
     try:
         cmd = _build_cmd_ytdlp_preresolved(url, fmt, player, player_name,
                                             stream_type, pipe_name)
@@ -665,6 +674,7 @@ def handle_play(msg):
         if tool == "streamlink":
             sl_path = find_tool("streamlink")
             if sl_path:
+                send_progress("streamlink でストリームを取得中...")
                 sl_error = _play_via_streamlink(url, quality, player, player_path,
                                                 sl_path)
                 if sl_error is None:
@@ -674,6 +684,7 @@ def handle_play(msg):
                     send_message({"success": False, "error": sl_error})
                     return
                 log.warning("streamlink failed (%s), falling back to yt-dlp", sl_error)
+                send_progress("streamlink 失敗 — yt-dlp で再試行中...")
             else:
                 log.warning("streamlink not found, falling back to yt-dlp")
 

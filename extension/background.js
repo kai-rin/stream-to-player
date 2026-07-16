@@ -26,6 +26,7 @@ chrome.runtime.onInstalled.addListener(async () => {
 
 // メッセージハンドラ
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === "playProgress") return false; // popup宛のブロードキャスト
   handleMessage(message).then(sendResponse).catch(err => {
     sendResponse({ success: false, error: err.message });
   });
@@ -94,6 +95,14 @@ async function handlePlay(message) {
 
     port.onMessage.addListener((response) => {
       void chrome.runtime.lastError; // Unchecked 警告防止
+      if (response.event === "progress") {
+        // ホストの処理状況をポップアップに中継 (ポップアップが閉じていても無視)
+        chrome.runtime.sendMessage({
+          action: "playProgress",
+          message: response.message,
+        }).catch(() => {});
+        return;
+      }
       if (response.event === "playback_started") {
         // 再生開始 → 元動画を停止
         if (message.tabId) {

@@ -1,5 +1,21 @@
 let currentPageInfo = null;
 let isLoading = false;
+let progressTarget = null; // 再生要求中に進捗を表示する先 (showStatus / showCustomStatus)
+
+// ホストの処理状況 (background 経由) をスピナー付きで表示
+chrome.runtime.onMessage.addListener((message) => {
+  if (message.action === "playProgress" && progressTarget) {
+    const span = document.createElement("span");
+    span.className = "spinner";
+    progressTarget(span.outerHTML + escapeHtml(message.message || ""), "loading");
+  }
+});
+
+function escapeHtml(text) {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
 
 const ui = {
   mainUi: document.getElementById("main-ui"),
@@ -153,6 +169,7 @@ async function handlePlay() {
   if (isLoading || !currentPageInfo) return;
 
   setLoading(true);
+  progressTarget = showStatus;
   showStatus(
     `<span class="spinner"></span>起動中...`,
     "loading",
@@ -179,6 +196,7 @@ async function handlePlay() {
     showStatus(`エラー: ${err.message}`, "error");
   } finally {
     setLoading(false);
+    progressTarget = null;
   }
 }
 
@@ -199,6 +217,7 @@ async function handleCustomPlay() {
   }
 
   ui.btnCustomPlay.disabled = true;
+  progressTarget = showCustomStatus;
   showCustomStatus('<span class="spinner"></span>起動中...', "loading");
 
   try {
@@ -221,6 +240,7 @@ async function handleCustomPlay() {
     showCustomStatus(`エラー: ${err.message}`, "error");
   } finally {
     ui.btnCustomPlay.disabled = false;
+    progressTarget = null;
   }
 }
 
