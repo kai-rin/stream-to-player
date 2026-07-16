@@ -163,7 +163,8 @@ async function handlePlay() {
     });
 
     if (response.success) {
-      showStatus("再生を開始しました", "ok");
+      // フォールバック時は推奨ツールと実際のツールが異なるため実ツール名を表示
+      showStatus(`再生を開始しました${response.tool ? ` (${response.tool})` : ""}`, "ok");
     } else {
       showStatus(`エラー: ${response.error}`, "error");
     }
@@ -205,7 +206,7 @@ async function handleCustomPlay() {
     });
 
     if (response.success) {
-      showCustomStatus("再生を開始しました", "ok");
+      showCustomStatus(`再生を開始しました${response.tool ? ` (${response.tool})` : ""}`, "ok");
     } else {
       showCustomStatus(`エラー: ${response.error}`, "error");
     }

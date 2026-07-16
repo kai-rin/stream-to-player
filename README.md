@@ -25,7 +25,7 @@ mpv や VLC などの専用プレイヤーに切り替えると:
 
 | サイト | Live | VOD | ツール |
 |--------|:----:|:---:|--------|
-| YouTube | o | o | streamlink / yt-dlp |
+| YouTube | o | o | yt-dlp |
 | Twitch | o | o | streamlink / yt-dlp |
 | Abema | o | o | streamlink |
 | TVer | o | o | yt-dlp |
@@ -49,7 +49,7 @@ mpv や VLC などの専用プレイヤーに切り替えると:
 
 | ツール | 用途 | 備考 |
 |--------|------|------|
-| [streamlink](https://streamlink.github.io/) | ライブ配信の取得 | Twitch・YouTube Live 等のリアルタイム配信向け |
+| [streamlink](https://streamlink.github.io/) | ライブ配信の取得 | Twitch・Abema 等のリアルタイム配信向け |
 | [yt-dlp](https://github.com/yt-dlp/yt-dlp) | VOD 取得・URL 解決 | TVer・アーカイブ動画等のオンデマンド配信向け |
 | [mpv](https://mpv.io/) | 動画再生 (推奨) | 再生検知に対応。再生開始時にブラウザ側の動画を自動停止します |
 | [VLC](https://www.videolan.org/) | 動画再生 (代替) | 再生はできるが、再生検知は非対応 |
@@ -176,17 +176,17 @@ mpv 使用時は再生が検知されると、ブラウザ側の動画が自動�
 ```
 [Popup] → runtime.sendMessage → [Service Worker] → connectNative → [Python Host]
                                       ↑                                 ↓
-                                 declarativeContent              subprocess.Popen
-                                 (対応サイトでのみ有効化)         streamlink / yt-dlp → mpv / vlc
+                                 sites.js による                  subprocess.Popen
+                                 サイト検出・ツール選択           streamlink / yt-dlp → mpv / vlc
 ```
 
 Chrome 拡張から外部プログラムを直接起動することはできないため、[Native Messaging](https://developer.chrome.com/docs/extensions/develop/concepts/native-messaging) を介して Python ホストと通信します。
 
 ### 再生パイプライン
 
-- streamlink 使用時 (ライブ配信): `streamlink URL quality -4 --player mpv`
+- streamlink 使用時 (ライブ配信): `streamlink URL quality -4 --player mpv`。失敗時は yt-dlp に自動フォールバック (streamlink 専用サイトを除く)
 - yt-dlp 使用時 (高速パス): `yt-dlp -g --force-ipv4` で URL 事前解決 → `mpv VIDEO_URL --audio-file=AUDIO_URL`
-- yt-dlp 使用時 (フォールバック): URL 解決失敗時、`mpv --ytdl-format=FORMAT URL` (mpv 内蔵 yt-dlp)
+- yt-dlp 使用時 (フォールバック): URL 解決失敗時、`mpv --ytdl-format=FORMAT URL` (mpv 内蔵 yt-dlp)。配信オフライン等のコンテンツ由来エラーは即座にエラー表示
 
 IPv6 は Twitch 等で極端に遅いため、すべてのパスで IPv4 を強制しています。
 

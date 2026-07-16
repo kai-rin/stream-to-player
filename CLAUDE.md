@@ -7,15 +7,15 @@
 ```
 [Popup] → runtime.sendMessage → [Service Worker] → connectNative → [Python Host]
                                       ↑                                 ↓
-                                 declarativeContent              subprocess.Popen
-                                 (対応サイトでのみ有効化)         streamlink / yt-dlp → mpv / vlc
+                                 sites.js による                  subprocess.Popen
+                                 サイト検出・ツール選択           streamlink / yt-dlp → mpv / vlc
 ```
 
 ## プロジェクト構成
 
 - `extension/` - Chrome 拡張機能 (Manifest V3, ES Modules)
   - `manifest.json` - MV3 マニフェスト
-  - `background.js` - Service Worker (declarativeContent, メッセージルーティング, connectNative)
+  - `background.js` - Service Worker (メッセージルーティング, connectNative)
   - `sites.js` - サイト別設定の一元管理 (ツール選択・Live判定・品質リスト)
   - `popup/` - ポップアップUI
   - `options/` - 設定ページ
@@ -44,4 +44,4 @@
 
 1. `extension/sites.js` の `SITE_CONFIGS` にエントリ追加
 2. `native-host/stream_to_player_host.py` の `SITE_TOOL_RULES` にルール追加
-3. 拡張を再読み込み → declarativeContent ルールが自動更新
+3. 拡張を再読み込み
