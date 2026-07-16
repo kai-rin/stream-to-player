@@ -52,6 +52,13 @@ function updateCustomQualities() {
 }
 
 async function init() {
+  // 設定ページと同じテーマを適用 (system はCSSの prefers-color-scheme に委ねる)
+  chrome.storage.sync.get({ theme: "system" }).then(({ theme }) => {
+    if (theme === "light" || theme === "dark") {
+      document.documentElement.setAttribute("data-theme", theme);
+    }
+  }).catch(() => {});
+
   ui.settingsLink.addEventListener("click", () => {
     chrome.runtime.openOptionsPage();
   });
