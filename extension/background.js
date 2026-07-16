@@ -84,10 +84,12 @@ async function handlePlay(message) {
       return;
     }
 
+    // streamlink 監視 (最大30s) + yt-dlp フォールバック解決 (最大15s) が
+    // 低速回線で直列に発生しても収まるよう余裕を持たせる
     const timeout = setTimeout(() => {
       port.disconnect();
-      reject(new Error("ネイティブホストのタイムアウト (60s)"));
-    }, 60000);
+      reject(new Error("ネイティブホストのタイムアウト (90s)"));
+    }, 90000);
 
     let resolved = false;
 
